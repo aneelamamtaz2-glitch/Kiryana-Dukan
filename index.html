@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a472a">
+<meta name="description" content="کریانہ دکان ریٹ لسٹ اور بل">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>کریانہ دکان</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Nastaliq Urdu', 'Arial Unicode MS', sans-serif;
+  background: #fdf6ee; direction: rtl; min-height: 100vh;
+}
+.tabs { display: flex; background: #1a472a; }
+.tab-btn {
+  flex: 1; padding: 13px 8px; border: none; cursor: pointer;
+  font-family: inherit; font-size: 15px; color: #a8d5b5;
+  background: transparent; transition: all 0.2s;
+}
+.tab-btn.active { background: #fdf6ee; color: #1a472a; font-weight: bold; border-radius: 12px 12px 0 0; }
+.header {
+  background: linear-gradient(135deg, #1a472a, #2d6a4f);
+  padding: 16px 16px 12px; position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+.header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.header h1 { color: #f0e6d0; font-size: 20px; }
+.header p { color: #a8d5b5; font-size: 12px; margin-top: 2px; }
+#searchInput {
+  width: 100%; padding: 10px 14px; border-radius: 10px; border: none;
+  font-size: 15px; background: rgba(255,255,255,0.15); color: #fff;
+  outline: none; font-family: inherit;
+}
+#searchInput::placeholder { color: #ccc; }
+.cats {
+  background: #fff; border-bottom: 1px solid #e8ddd0;
+  padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 7px;
+}
+.cat-btn {
+  padding: 5px 14px; border-radius: 20px; border: none; cursor: pointer;
+  font-size: 13px; background: #f0ebe4; color: #555; font-family: inherit;
+}
+.cat-btn.active { background: #2d6a4f; color: #fff; font-weight: bold; }
+.content { padding: 12px 12px 100px; max-width: 600px; margin: 0 auto; }
+.cat-header {
+  background: #2d6a4f; color: #f0e6d0;
+  padding: 6px 14px; border-radius: 8px; margin: 14px 0 6px;
+  font-size: 14px; font-weight: bold;
+}
+.item-card {
+  background: #fff; border-radius: 12px; margin-bottom: 8px;
+  padding: 12px 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  border: 1px solid #f0ebe4;
+}
+.item-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.item-name { font-size: 15px; color: #2c2c2c; font-weight: 600; }
+.item-cat { font-size: 12px; color: #999; margin-top: 2px; }
+.item-price {
+  background: #e8f5e9; color: #1a472a; padding: 6px 12px;
+  border-radius: 20px; font-weight: bold; font-size: 15px;
+  min-width: 75px; text-align: center; white-space: nowrap;
+}
+.btn-edit, .btn-del, .btn-add-bill { border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 16px; }
+.btn-edit { background: #fff8e1; }
+.btn-del { background: #fde8e8; }
+.btn-add-bill { background: #e3f2fd; font-size: 13px; padding: 6px 12px; color: #1565c0; font-family: inherit; }
+.edit-form { display: none; margin-top: 10px; }
+.edit-form.open { display: block; }
+.edit-form input {
+  width: 100%; padding: 9px 12px; border-radius: 10px; border: 1.5px solid #ddd;
+  font-size: 14px; font-family: inherit; background: #fdf6ee;
+  margin-bottom: 7px; direction: rtl; outline: none;
+}
+.edit-btns { display: flex; gap: 8px; }
+.btn-save { flex:1; background:#2d6a4f; color:#fff; border:none; border-radius:8px; padding:9px; font-size:14px; cursor:pointer; font-family:inherit; }
+.btn-cancel { flex:1; background:#f0ebe4; color:#555; border:none; border-radius:8px; padding:9px; font-size:14px; cursor:pointer; font-family:inherit; }
+.fab {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, #1a472a, #2d6a4f); color: #fff;
+  border: none; border-radius: 30px; padding: 14px 28px; font-size: 16px;
+  cursor: pointer; box-shadow: 0 6px 24px rgba(26,71,42,0.4);
+  font-family: inherit; z-index: 40;
+}
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; }
+.overlay.open { display: flex; }
+.modal {
+  background: #fff; width: 100%; max-width: 600px;
+  margin: 0 auto; border-radius: 20px 20px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto;
+}
+.modal h3 { color: #1a472a; margin-bottom: 14px; font-size: 18px; }
+.modal input {
+  width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #ddd;
+  font-size: 15px; font-family: inherit; background: #fdf6ee; margin-bottom: 8px; direction: rtl; outline: none;
+}
+.modal-btns { display: flex; gap: 10px; margin-top: 6px; }
+.modal-btns button { flex:1; padding:12px; border-radius:10px; border:none; font-size:15px; cursor:pointer; font-family:inherit; }
+.modal-btns .btn-ok { background:#2d6a4f; color:#fff; }
+.modal-btns .btn-cl { background:#f0ebe4; color:#555; }
+.toast { display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 22px; border-radius:20px; font-size:14px; color:#fff; z-index:200; font-family:inherit; box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+.toast.show { display: block; }
+.empty { text-align: center; padding: 40px; color: #999; }
+.empty div { font-size: 40px; margin-bottom: 10px; }
+.bill-header { background: linear-gradient(135deg, #1a472a, #2d6a4f); padding: 16px; position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+.bill-header h2 { color: #f0e6d0; font-size: 20px; }
+.bill-header p { color: #a8d5b5; font-size: 12px; margin-top: 3px; }
+.bill-content { padding: 12px 12px 120px; max-width: 600px; margin: 0 auto; }
+.bill-search { display: flex; gap: 8px; margin-bottom: 14px; }
+.bill-search input {
+  flex: 1; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #ddd;
+  font-size: 15px; font-family: inherit; background: #fff; direction: rtl; outline: none;
+}
+.bill-suggest { background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); margin-bottom: 12px; overflow: hidden; border: 1px solid #e8ddd0; }
+.suggest-item { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #f0ebe4; }
+.suggest-item:last-child { border-bottom: none; }
+.suggest-name { font-size: 14px; color: #2c2c2c; }
+.suggest-price { color: #2d6a4f; font-weight: bold; font-size: 14px; }
+.bill-item-card { background: #fff; border-radius: 12px; margin-bottom: 8px; padding: 12px 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); border: 1px solid #f0ebe4; }
+.bill-item-row { display: flex; align-items: center; gap: 8px; }
+.bill-item-name { flex: 1; font-size: 14px; color: #2c2c2c; font-weight: 600; }
+.qty-box { display: flex; align-items: center; gap: 6px; }
+.qty-btn { background: #f0ebe4; border: none; border-radius: 6px; width: 28px; height: 28px; font-size: 18px; cursor: pointer; line-height: 1; }
+.qty-num { font-size: 15px; font-weight: bold; min-width: 20px; text-align: center; color: #1a472a; }
+.bill-item-total { background: #e8f5e9; color: #1a472a; padding: 5px 10px; border-radius: 16px; font-weight: bold; font-size: 14px; white-space: nowrap; }
+.btn-remove-bill { background: #fde8e8; border: none; border-radius: 8px; padding: 5px 9px; cursor: pointer; font-size: 15px; }
+.total-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a472a; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 40; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); }
+.total-bar .label { font-size: 14px; color: #a8d5b5; }
+.total-bar .amount { font-size: 22px; font-weight: bold; color: #f0e6d0; }
+.btn-print { background: #f0e6d0; color: #1a472a; border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: bold; }
+.print-bill { display: none; background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px dashed #2d6a4f; }
+.print-bill.show { display: block; }
+.print-bill h3 { text-align: center; color: #1a472a; font-size: 18px; margin-bottom: 4px; }
+.print-bill .date { text-align: center; color: #999; font-size: 12px; margin-bottom: 14px; }
+.print-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f0ebe4; font-size: 14px; }
+.print-total { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 2px solid #2d6a4f; font-size: 17px; font-weight: bold; color: #1a472a; }
+.print-actions { display: flex; gap: 10px; margin-top: 14px; }
+.print-actions button { flex:1; padding:11px; border-radius:10px; border:none; font-size:14px; cursor:pointer; font-family:inherit; }
+.btn-share { background:#2d6a4f; color:#fff; }
+.btn-newbill { background:#f0ebe4; color:#555; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tabRates" onclick="showTab('rates')">🏪 ریٹ لسٹ</button>
+  <button class="tab-btn" id="tabBill" onclick="showTab('bill')">🧾 بل بنائیں</button>
+</div>
+
+<div id="ratesTab">
+  <div class="header">
+    <div class="header-top">
+      <span style="font-size:26px">🏪</span>
+      <div><h1>کریانہ دکان</h1><p id="countLabel">ریٹ لسٹ</p></div>
+    </div>
+    <input type="text" id="searchInput" placeholder="🔍 چیز کا نام لکھیں..." oninput="renderRates()">
+  </div>
+  <div class="cats" id="catBar"></div>
+  <div class="content" id="ratesContent"></div>
+  <button class="fab" onclick="openAddModal()">+ نئی چیز شامل کریں</button>
+</div>
+
+<div id="billTab" style="display:none">
+  <div class="bill-header">
+    <h2>🧾 بل بنائیں</h2>
+    <p id="billCountLabel">0 اشیاء — کل: ₨ 0</p>
+  </div>
+  <div class="bill-content">
+    <div class="bill-search">
+      <input type="text" id="billSearch" placeholder="چیز کا نام لکھیں..." oninput="showSuggestions()">
+    </div>
+    <div class="bill-suggest" id="billSuggest" style="display:none"></div>
+    <div class="print-bill" id="printBill">
+      <h3>🏪 کریانہ دکان</h3>
+      <div class="date" id="billDate"></div>
+      <div id="printRows"></div>
+      <div class="print-total"><span>کل رقم</span><span id="printTotal"></span></div>
+      <div class="print-actions">
+        <button class="btn-share" onclick="shareBill()">📤 شیئر کریں</button>
+        <button class="btn-newbill" onclick="newBill()">🔄 نیا بل</button>
+      </div>
+    </div>
+    <div id="billItems"></div>
+    <div id="emptyBill" class="empty"><div>🧾</div><p>اوپر چیز کا نام لکھیں اور شامل کریں</p></div>
+  </div>
+  <div class="total-bar" id="totalBar" style="display:none">
+    <div><div class="label">کل رقم</div><div class="amount" id="totalAmount">₨ 0</div></div>
+    <button class="btn-print" onclick="generateBill()">بل بنائیں ✓</button>
+  </div>
+</div>
+
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <h3>نئی چیز شامل کریں</h3>
+    <input type="text" id="newName" placeholder="چیز کا نام">
+    <input type="number" id="newPrice" placeholder="ریٹ (روپے میں)">
+    <input type="text" id="newCat" placeholder="قسم (مثلاً: اناج)" value="متفرق">
+    <div class="modal-btns">
+      <button class="btn-ok" onclick="addItem()">✓ شامل کریں</button>
+      <button class="btn-cl" onclick="closeAddModal()">✕ بند کریں</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = "kiryana_v3";
+const DEFAULT = [
+  {id:1,name:"آٹا (10 کلو)",price:1100,cat:"اناج"},
+  {id:2,name:"چینی (1 کلو)",price:160,cat:"اناج"},
+  {id:3,name:"چاول باسمتی (1 کلو)",price:380,cat:"اناج"},
+  {id:4,name:"چاول سیلہ (1 کلو)",price:280,cat:"اناج"},
+  {id:5,name:"سوجی (500 گرام)",price:90,cat:"اناج"},
+  {id:6,name:"بیسن (1 کلو)",price:220,cat:"اناج"},
+  {id:7,name:"دال مسور (1 کلو)",price:320,cat:"دالیں"},
+  {id:8,name:"دال چنا (1 کلو)",price:280,cat:"دالیں"},
+  {id:9,name:"دال موٹھ (1 کلو)",price:260,cat:"دالیں"},
+  {id:10,name:"دال ماش (1 کلو)",price:350,cat:"دالیں"},
+  {id:11,name:"گھی (1 کلو)",price:780,cat:"گھی و تیل"},
+  {id:12,name:"کوکنگ آئل (1 لیٹر)",price:490,cat:"گھی و تیل"},
+  {id:13,name:"سرسوں کا تیل (1 لیٹر)",price:420,cat:"گھی و تیل"},
+  {id:14,name:"نمک (800 گرام)",price:60,cat:"مصالحے"},
+  {id:15,name:"لال مرچ پاؤڈر (100 گرام)",price:120,cat:"مصالحے"},
+  {id:16,name:"ہلدی (100 گرام)",price:90,cat:"مصالحے"},
+  {id:17,name:"دھنیا پاؤڈر (100 گرام)",price:80,cat:"مصالحے"},
+  {id:18,name:"گرم مصالحہ (50 گرام)",price:110,cat:"مصالحے"},
+  {id:19,name:"سرکہ (750 ملی)",price:120,cat:"مصالحے"},
+  {id:20,name:"ٹماٹر پیسٹ (200 گرام)",price:110,cat:"مصالحے"},
+  {id:21,name:"چائے پتی (200 گرام)",price:320,cat:"مشروبات"},
+  {id:22,name:"چائے پتی (500 گرام)",price:750,cat:"مشروبات"},
+  {id:23,name:"دودھ پاؤڈر (400 گرام)",price:680,cat:"مشروبات"},
+  {id:24,name:"صابن نہانے کا",price:120,cat:"صابن و صفائی"},
+  {id:25,name:"واشنگ پاؤڈر (1 کلو)",price:280,cat:"صابن و صفائی"},
+  {id:26,name:"برتن دھونے کا صابن",price:90,cat:"صابن و صفائی"},
+  {id:27,name:"بسکٹ (ایک پیکٹ)",price:60,cat:"بسکٹ و نمکین"},
+  {id:28,name:"نمکو (200 گرام)",price:80,cat:"بسکٹ و نمکین"},
+  {id:29,name:"ماچس",price:20,cat:"متفرق"},
+  {id:30,name:"موم بتی (10 عدد)",price:80,cat:"متفرق"},
+];
+
+let items=[], nextId=100, activeCat="سب", billItems=[];
+
+function load() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) { const d=JSON.parse(s); items=d.items; nextId=d.nextId||100; }
+    else { items=DEFAULT; }
+  } catch { items=DEFAULT; }
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({items,nextId})); } catch {}
+}
+function showTab(tab) {
+  document.getElementById('ratesTab').style.display = tab==='rates'?'block':'none';
+  document.getElementById('billTab').style.display = tab==='bill'?'block':'none';
+  document.getElementById('tabRates').classList.toggle('active',tab==='rates');
+  document.getElementById('tabBill').classList.toggle('active',tab==='bill');
+  if(tab==='bill') renderBill();
+}
+function getCategories() { return ["سب",...Array.from(new Set(items.map(i=>i.cat)))]; }
+function renderCats() {
+  document.getElementById("catBar").innerHTML = getCategories().map(c=>
+    `<button class="cat-btn${activeCat===c?' active':''}" onclick="setCat('${c}')">${c}</button>`
+  ).join("");
+}
+function setCat(c){activeCat=c;renderRates();}
+function renderRates() {
+  renderCats();
+  const q=document.getElementById("searchInput").value.trim();
+  const filtered=items.filter(i=>(i.name.includes(q)||i.cat.includes(q))&&(activeCat==="سب"||i.cat===activeCat));
+  document.getElementById("countLabel").textContent=`ریٹ لسٹ — ${items.length} اشیاء`;
+  const content=document.getElementById("ratesContent");
+  if(!filtered.length){content.innerHTML=`<div class="empty"><div>🔍</div><p>کوئی چیز نہیں ملی</p></div>`;return;}
+  const cats=Array.from(new Set(filtered.map(i=>i.cat)));
+  let html="";
+  cats.forEach(cat=>{
+    const ci=filtered.filter(i=>i.cat===cat);
+    if(activeCat==="سب") html+=`<div class="cat-header">${cat} (${ci.length})</div>`;
+    ci.forEach(item=>{html+=itemHTML(item);});
+  });
+  content.innerHTML=html;
+}
+function itemHTML(item){
+  return `<div class="item-card" id="card-${item.id}">
+    <div class="item-row">
+      <div style="flex:1"><div class="item-name">${item.name}</div><div class="item-cat">${item.cat}</div></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        <div class="item-price">₨ ${item.price.toLocaleString()}</div>
+        <button class="btn-add-bill" onclick="addToBillFromRates(${item.id})">+ بل میں</button>
+        <button class="btn-edit" onclick="toggleEdit(${item.id})">✏️</button>
+        <button class="btn-del" onclick="delItem(${item.id})">🗑️</button>
+      </div>
+    </div>
+    <div class="edit-form" id="edit-${item.id}">
+      <input type="text" id="ename-${item.id}" value="${item.name}" placeholder="نام">
+      <input type="number" id="eprice-${item.id}" value="${item.price}" placeholder="ریٹ">
+      <input type="text" id="ecat-${item.id}" value="${item.cat}" placeholder="قسم">
+      <div class="edit-btns">
+        <button class="btn-save" onclick="saveEdit(${item.id})">✓ محفوظ کریں</button>
+        <button class="btn-cancel" onclick="toggleEdit(${item.id})">✕ منسوخ</button>
+      </div>
+    </div>
+  </div>`;
+}
+function toggleEdit(id){document.getElementById("edit-"+id).classList.toggle("open");}
+function saveEdit(id){
+  const n=document.getElementById("ename-"+id).value.trim();
+  const p=parseInt(document.getElementById("eprice-"+id).value);
+  const c=document.getElementById("ecat-"+id).value.trim();
+  if(!n||!p)return;
+  items=items.map(i=>i.id===id?{...i,name:n,price:p,cat:c||"متفرق"}:i);
+  save();renderRates();showToast("ریٹ اپڈیٹ ہو گیا ✓","#2d6a4f");
+}
+function delItem(id){
+  const item=items.find(i=>i.id===id);
+  if(!item)return;
+  if(!confirm(`"${item.name}" حذف کریں؟`))return;
+  items=items.filter(i=>i.id!==id);save();renderRates();showToast("حذف ہو گئی","#c0392b");
+}
+function openAddModal(){document.getElementById("addOverlay").classList.add("open");}
+function closeAddModal(){
+  document.getElementById("addOverlay").classList.remove("open");
+  document.getElementById("newName").value="";
+  document.getElementById("newPrice").value="";
+  document.getElementById("newCat").value="متفرق";
+}
+function addItem(){
+  const n=document.getElementById("newName").value.trim();
+  const p=parseInt(document.getElementById("newPrice").value);
+  const c=document.getElementById("newCat").value.trim()||"متفرق";
+  if(!n||!p){alert("نام اور ریٹ ضروری ہے");return;}
+  items.push({id:nextId++,name:n,price:p,cat:c});
+  save();closeAddModal();renderRates();showToast("نئی چیز شامل ہو گئی ✓","#2d6a4f");
+}
+function addToBillFromRates(id){
+  const item=items.find(i=>i.id===id);if(!item)return;
+  addToBill(item);showToast(`${item.name} بل میں شامل ✓`,"#1565c0");
+}
+function addToBill(item){
+  const ex=billItems.find(b=>b.id===item.id);
+  if(ex){ex.qty++;}else{billItems.push({id:item.id,name:item.name,price:item.price,qty:1});}
+  renderBill();document.getElementById("printBill").classList.remove("show");
+}
+function showSuggestions(){
+  const q=document.getElementById("billSearch").value.trim();
+  const sug=document.getElementById("billSuggest");
+  if(!q){sug.style.display="none";return;}
+  const matches=items.filter(i=>i.name.includes(q)).slice(0,6);
+  if(!matches.length){sug.style.display="none";return;}
+  sug.style.display="block";
+  sug.innerHTML=matches.map(i=>`<div class="suggest-item" onclick="pickSuggestion(${i.id})">
+    <span class="suggest-name">${i.name}</span>
+    <span class="suggest-price">₨ ${i.price.toLocaleString()}</span>
+  </div>`).join("");
+}
+function pickSuggestion(id){
+  const item=items.find(i=>i.id===id);if(!item)return;
+  addToBill(item);
+  document.getElementById("billSearch").value="";
+  document.getElementById("billSuggest").style.display="none";
+  showToast(`${item.name} شامل ✓`,"#2d6a4f");
+}
+function changeQty(id,delta){
+  const b=billItems.find(b=>b.id===id);if(!b)return;
+  b.qty+=delta;if(b.qty<=0)billItems=billItems.filter(b=>b.id!==id);
+  renderBill();document.getElementById("printBill").classList.remove("show");
+}
+function removeBillItem(id){billItems=billItems.filter(b=>b.id!==id);renderBill();document.getElementById("printBill").classList.remove("show");}
+function getTotal(){return billItems.reduce((s,b)=>s+b.price*b.qty,0);}
+function renderBill(){
+  const total=getTotal();
+  const container=document.getElementById("billItems");
+  const empty=document.getElementById("emptyBill");
+  const totalBar=document.getElementById("totalBar");
+  document.getElementById("billCountLabel").textContent=`${billItems.length} اشیاء — کل: ₨ ${total.toLocaleString()}`;
+  if(!billItems.length){container.innerHTML="";empty.style.display="block";totalBar.style.display="none";return;}
+  empty.style.display="none";totalBar.style.display="flex";
+  document.getElementById("totalAmount").textContent="₨ "+total.toLocaleString();
+  container.innerHTML=billItems.map(b=>`<div class="bill-item-card">
+    <div class="bill-item-row">
+      <div class="bill-item-name">${b.name}<br><span style="color:#999;font-size:12px">₨ ${b.price.toLocaleString()} فی عدد</span></div>
+      <div class="qty-box">
+        <button class="qty-btn" onclick="changeQty(${b.id},-1)">−</button>
+        <span class="qty-num">${b.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${b.id},1)">+</button>
+      </div>
+      <div class="bill-item-total">₨ ${(b.price*b.qty).toLocaleString()}</div>
+      <button class="btn-remove-bill" onclick="removeBillItem(${b.id})">🗑️</button>
+    </div>
+  </div>`).join("");
+}
+function generateBill(){
+  if(!billItems.length)return;
+  const now=new Date();
+  document.getElementById("billDate").textContent=now.toLocaleDateString('ur-PK',{year:'numeric',month:'long',day:'numeric'})+" — "+now.toLocaleTimeString('ur-PK',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById("printRows").innerHTML=billItems.map(b=>`<div class="print-row"><span>${b.name} × ${b.qty}</span><span>₨ ${(b.price*b.qty).toLocaleString()}</span></div>`).join("");
+  document.getElementById("printTotal").textContent="₨ "+getTotal().toLocaleString();
+  document.getElementById("printBill").classList.add("show");
+  document.getElementById("printBill").scrollIntoView({behavior:"smooth"});
+}
+function shareBill(){
+  const now=new Date();
+  let text=`🏪 کریانہ دکان\n📅 ${now.toLocaleDateString('ur-PK')}\n\n`;
+  billItems.forEach(b=>{text+=`• ${b.name} × ${b.qty} = ₨ ${(b.price*b.qty).toLocaleString()}\n`;});
+  text+=`\n━━━━━━━━━━━━\n💰 کل رقم: ₨ ${getTotal().toLocaleString()}`;
+  if(navigator.share){navigator.share({title:"کریانہ بل",text});}
+  else{navigator.clipboard.writeText(text).then(()=>showToast("بل کاپی ہو گیا ✓","#2d6a4f"));}
+}
+function newBill(){
+  if(!confirm("نیا بل شروع کریں؟"))return;
+  billItems=[];document.getElementById("printBill").classList.remove("show");renderBill();
+}
+function showToast(msg,bg){
+  const t=document.getElementById("toast");t.textContent=msg;t.style.background=bg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2500);
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+load();renderRates();
+</script>
+</body>
+</html>
